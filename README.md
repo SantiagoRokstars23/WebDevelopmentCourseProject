@@ -142,11 +142,63 @@ DELETE http://localhost:3000/api/products/1
 
 ---
 
+## Ejecutar con Docker
+
+La forma más rápida de levantar todo el proyecto sin instalar Node.js ni PostgreSQL manualmente.
+
+### Requisito
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) instalado y corriendo
+
+### Iniciar todos los servicios
+
+```bash
+docker compose up -d
+```
+
+Esto levanta automáticamente:
+- **PostgreSQL** en el puerto `5432` (crea la tabla y datos de ejemplo al iniciar)
+- **Backend** en `http://localhost:3000`
+- **Frontend** en `http://localhost:80`
+
+### Comandos útiles
+
+```bash
+# Ver logs en tiempo real
+docker compose logs -f
+
+# Ver logs solo del backend
+docker compose logs -f backend
+
+# Detener todos los contenedores (los datos se conservan)
+docker compose down
+
+# Detener y borrar la base de datos (reset completo)
+docker compose down -v
+
+# Reconstruir las imágenes después de cambiar código
+docker compose up -d --build
+```
+
+### Servicios y puertos
+
+| Servicio   | URL                          | Puerto |
+|------------|------------------------------|--------|
+| Frontend   | http://localhost             | 80     |
+| Backend    | http://localhost:3000        | 3000   |
+| PostgreSQL | localhost:5432               | 5432   |
+
+> Los datos de PostgreSQL persisten en un volumen Docker (`postgres_data`).
+> Solo se pierden al ejecutar `docker compose down -v`.
+
+---
+
 ## Stack tecnológico
 
-| Capa       | Tecnología              |
-|------------|-------------------------|
-| Backend    | Node.js + Express       |
-| Base datos | PostgreSQL + pg (Pool)  |
-| Frontend   | HTML + CSS + JavaScript |
-| Dev tool   | nodemon                 |
+| Capa           | Tecnología                  |
+|----------------|-----------------------------|
+| Backend        | Node.js + Express           |
+| Base de datos  | PostgreSQL + pg (Pool)      |
+| Frontend       | HTML + CSS + JavaScript     |
+| Contenedores   | Docker + Docker Compose     |
+| Dev tool       | nodemon                     |

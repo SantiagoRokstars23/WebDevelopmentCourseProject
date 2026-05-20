@@ -1,0 +1,82 @@
+# =====================================================
+# DOCKER COMPOSE — Orquestación de servicios
+# =====================================================
+# Servicios:
+#   db       → PostgreSQL (base de datos)
+#   backend  → Node.js + Express (API REST)
+#   frontend → nginx (archivos estáticos)
+#
+# Comandos útiles:
+#   Iniciar todo:         docker compose up -d
+#   Ver logs:             docker compose logs -f
+#   Detener todo:         docker compose down
+#   Borrar BD (reset):    docker compose down -v
+#   Reconstruir imagen:   docker compose up -d --build
+# =====================================================
+
+services:
+
+  # ---------------------------------------------------
+  # SERVICIO: Base de datos PostgreSQL
+  # ---------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: crud_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres        # Nombre de la base de datos
+      POSTGRES_USER: admin         # Usuario
+      POSTGRES_PASSWORD: admin123  # Contraseña
+    ports:
+      - "5432:5432"                # Expone el puerto para conectarte desde DBeaver
+    volumes:
+      # Persiste los datos aunque el contenedor se elimine
+      - postgres_data:/var/lib/postgresql/data
+      # Ejecuta el schema.sql automáticamente la primera vez que se crea la BD
+      - ./backend/BD/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+    healthcheck:
+      # Verifica que PostgreSQL esté listo antes de iniciar el backend
+      test: ["CMD-SHELL", "pg_isready -U admin -d postgres"]
+      interval: 5s    # Revisa cada 5 segundos
+      timeout: 5s     # Espera máximo 5 segundos por respuesta
+      retries: 5      # Si falla 5 veces seguidas, marca el servicio como unhealthy
+
+  # ---------------------------------------------------
+  # SERVICIO: Backend Node.js
+  # ---------------------------------------------------
+  backend:
+    build:
+      context: ./backend           # Carpeta donde está el Dockerfile del backend
+    container_name: crud_backend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      DB_HOST: db                  # Nombre del servicio de BD (no localhost)
+      DB_PORT: 5432
+      DB_NAME: postgres
+      DB_USER: admin
+      DB_PASSWORD: admin123
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy # Espera a que la BD esté lista (healthcheck)
+
+  # ---------------------------------------------------
+  # SERVICIO: Frontend nginx
+  # ---------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend          # Carpeta donde está el Dockerfile del frontend
+    container_name: crud_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"                    # Accede en http://localhost
+    depends_on:
+      - backend
+
+# ---------------------------------------------------
+# VOLÚMENES
+# ---------------------------------------------------
+volumes:
+  postgres_data:                   # Volumen nombrado para persistir la BD
