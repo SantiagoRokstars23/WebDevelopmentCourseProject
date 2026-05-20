@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel - Gestión de Productos</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <!-- =====================================================
+         SIDEBAR - Navegación lateral del admin panel
+    ====================================================== -->
+    <aside class="sidebar">
+      <div class="sidebar__brand">
+        <span class="sidebar__icon">📦</span>
+        <span class="sidebar__title">StockAdmin</span>
+      </div>
+
+      <nav class="sidebar__nav">
+        <a href="#" class="sidebar__link sidebar__link--active">
+          <span class="sidebar__link-icon">🏠</span>
+          Dashboard
+        </a>
+        <a href="#" class="sidebar__link">
+          <span class="sidebar__link-icon">📋</span>
+          Productos
+        </a>
+        <a href="#" class="sidebar__link">
+          <span class="sidebar__link-icon">📊</span>
+          Reportes
+        </a>
+        <a href="#" class="sidebar__link">
+          <span class="sidebar__link-icon">⚙️</span>
+          Configuración
+        </a>
+      </nav>
+
+      <div class="sidebar__footer">
+        <span>v1.0.0</span>
+      </div>
+    </aside>
+
+    <!-- =====================================================
+         CONTENIDO PRINCIPAL
+    ====================================================== -->
+    <main class="main">
+
+      <!-- HEADER -->
+      <header class="header">
+        <div class="header__left">
+          <h1 class="header__title">Gestión de Productos</h1>
+          <p class="header__subtitle">Administra tu inventario fácilmente</p>
+        </div>
+        <div class="header__right">
+          <!-- Botón para abrir el modal de creación -->
+          <button class="btn btn--primary" id="btnOpenModal">
+            + Nuevo Producto
+          </button>
+        </div>
+      </header>
+
+      <!-- TARJETAS DE ESTADÍSTICAS -->
+      <section class="stats">
+        <div class="stat-card">
+          <div class="stat-card__icon stat-card__icon--blue">📦</div>
+          <div class="stat-card__info">
+            <span class="stat-card__value" id="statTotal">0</span>
+            <span class="stat-card__label">Total Productos</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon stat-card__icon--green">✅</div>
+          <div class="stat-card__info">
+            <span class="stat-card__value" id="statInStock">0</span>
+            <span class="stat-card__label">Con Stock</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon stat-card__icon--red">⚠️</div>
+          <div class="stat-card__info">
+            <span class="stat-card__value" id="statLowStock">0</span>
+            <span class="stat-card__label">Stock Bajo (&lt;10)</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon stat-card__icon--purple">💰</div>
+          <div class="stat-card__info">
+            <span class="stat-card__value" id="statCategories">0</span>
+            <span class="stat-card__label">Categorías</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TABLA DE PRODUCTOS -->
+      <section class="table-section">
+        <div class="table-section__header">
+          <h2 class="table-section__title">Lista de Productos</h2>
+          <!-- Buscador en tiempo real -->
+          <input
+            type="text"
+            class="search-input"
+            id="searchInput"
+            placeholder="Buscar producto..."
+          />
+        </div>
+
+        <!-- Indicador de carga -->
+        <div class="loading" id="loading">
+          <div class="loading__spinner"></div>
+          <span>Cargando productos...</span>
+        </div>
+
+        <!-- Tabla principal -->
+        <div class="table-wrapper" id="tableWrapper" style="display: none;">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Categoría</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody">
+              <!-- Las filas se generan dinámicamente desde app.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mensaje cuando no hay productos -->
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <span class="empty-state__icon">📭</span>
+          <p class="empty-state__text">No hay productos registrados</p>
+          <button class="btn btn--primary" id="btnOpenModalEmpty">
+            Crear primer producto
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <!-- =====================================================
+         MODAL - Crear / Editar Producto
+    ====================================================== -->
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal">
+        <div class="modal__header">
+          <!-- El título cambia dinámicamente: "Nuevo Producto" o "Editar Producto" -->
+          <h3 class="modal__title" id="modalTitle">Nuevo Producto</h3>
+          <button class="modal__close" id="btnCloseModal">&times;</button>
+        </div>
+
+        <form class="modal__form" id="productForm">
+          <!-- Campo oculto para guardar el ID en modo edición -->
+          <input type="hidden" id="productId" />
+
+          <div class="form-group">
+            <label class="form-label" for="productName">Nombre *</label>
+            <input
+              type="text"
+              class="form-input"
+              id="productName"
+              placeholder="Ej: Laptop Pro 15"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="productCategory">Categoría *</label>
+            <input
+              type="text"
+              class="form-input"
+              id="productCategory"
+              placeholder="Ej: Electrónica"
+              required
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="productPrice">Precio ($) *</label>
+              <input
+                type="number"
+                class="form-input"
+                id="productPrice"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="productStock">Stock *</label>
+              <input
+                type="number"
+                class="form-input"
+                id="productStock"
+                placeholder="0"
+                min="0"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="modal__actions">
+            <button type="button" class="btn btn--secondary" id="btnCancel">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn--primary" id="btnSubmit">
+              Guardar Producto
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- =====================================================
+         TOAST - Notificaciones emergentes
+    ====================================================== -->
+    <div class="toast" id="toast">
+      <span class="toast__icon" id="toastIcon">✅</span>
+      <span class="toast__message" id="toastMessage">Operación exitosa</span>
+    </div>
+
+    <!-- Carga el script principal del frontend -->
+    <script src="js/app.js"></script>
+  </body>
+</html>
